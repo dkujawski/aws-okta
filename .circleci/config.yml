@@ -1,6 +1,5 @@
 version: 2
 jobs:
-
   test-build-golang-prev:
     docker:
       - image: circleci/golang:1.12
@@ -16,7 +15,6 @@ jobs:
           command: |
             go build -mod=vendor
             ./aws-okta version
-
   dist-windows:
     docker:
       - image: circleci/golang:1.13
@@ -44,9 +42,6 @@ jobs:
             make -f Makefile.release publish-github-windows
 workflows:
   version: 2
-  # currently we only build/publish for linux: macOS builds require non-FOSS
-  # Keychain libs that require a macOS host to build on
-  # https://github.com/segmentio/aws-okta/issues/81
   test-dist-publish-windows:
     jobs:
       - test-build-golang-prev
