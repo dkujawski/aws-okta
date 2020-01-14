@@ -51,11 +51,11 @@ workflows:
             tags:
               only: /.*/
       - publish-github-windows:
-        context: github-dkujawskicircle-oss-release
-        requires:
-          - dist-windows
-        filters:
-          branches:
-            ignore: /.*/
-          tags:
-            only: /v[0-9]+(\.[0-9]+)*(-[a-zA-Z0-9-]+)?/
+          context: github-dkujawskicircle-oss-release
+          requires:
+            - dist-windows
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /v[0-9]+(\.[0-9]+)*(-[a-zA-Z0-9-]+)?/
