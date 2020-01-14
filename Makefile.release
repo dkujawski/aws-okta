@@ -56,7 +56,7 @@ github-release:
 	set -o pipefail; \
 	scripts/changelog | github-release release \
 	--security-token $$GH_LOGIN \
-	--user $(GH_USER)
+	--user $(GH_USER) \
 	--repo aws-okta \
 	$(GITHUB_RELEASE_FLAGS) \
 	--tag $(VERSION) \
