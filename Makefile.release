@@ -94,7 +94,7 @@ publish-github-windows-exe: dist/aws-okta-$(VERSION)-windows.exe | github-releas
 	--user $(GH_USER) \
 	--repo aws-okta \
 	--tag $(VERSION) \
-	--name aws-okta-$(VERSION)-windows \
+	--name aws-okta.exe \
 	--replace \
 	--file $<
 
