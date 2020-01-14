@@ -88,7 +88,7 @@ publish-github-linux-bin: dist/aws-okta-$(VERSION)-linux-amd64 | github-release
 	--replace \
 	--file $<
 
-publish-github-windows-exe: dist/aws-okta-$(VERSION)-windows | github-release
+publish-github-windows-exe: dist/aws-okta-$(VERSION)-windows.exe | github-release
 	github-release upload \
 	--security-token $$GH_LOGIN \
 	--user $(GH_USER) \

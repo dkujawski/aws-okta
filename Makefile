@@ -24,12 +24,11 @@ dist/aws-okta-$(VERSION)-darwin-amd64: | dist/
 dist/aws-okta-$(VERSION)-linux-amd64: | dist/
 	GOOS=linux GOARCH=amd64 GO111MODULE=on go build -mod=vendor $(LDFLAGS) -o $@
 
-dist/aws-okta-$(VERSION)-windows: | dist/
+dist/aws-okta-$(VERSION)-windows.exe: | dist/
 	go mod vendor
 	go get -u github.com/marshallbrekka/go-u2fhost
 	go get github.com/nomad-software/vend
-	which vend
 	vend
-	GOOS=windows GOARCH=amd64 GO111MODULE=on go build -mod=vendor $(LDFLAGS) -o $@.exe
+	GOOS=windows GOARCH=amd64 GO111MODULE=on go build -mod=vendor $(LDFLAGS) -o $@
 
 .PHONY: clean all
