@@ -56,7 +56,7 @@ workflows:
             tags:
               only: /.*/
       - publish-github-windows:
-        context: github-segmentcircle-oss-release
+        context: github-dkujawskicircle-oss-release
         requires:
           - dist-windows
         filters:
