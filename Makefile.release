@@ -9,7 +9,7 @@ include Makefile
 SHELL := /bin/bash
 
 # github-release install location
-export PATH := ~/go/bin:$(PATH)
+export PATH := /usr/local/go/bin:$(PATH)
 
 # set --pre-release if not tagged or tree is dirty or there's a `-` in the tag
 ifneq (,$(findstring -,$(VERSION)))
