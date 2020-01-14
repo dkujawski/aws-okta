@@ -38,10 +38,10 @@ jobs:
       - checkout
       - attach_workspace: { at: . }
       - run: 
-        name: Install tools
-        command: |
-          make -f Makefile.tools github-release
-          make -f Makefile.release publish-github-windows
+          name: Install tools
+          command: |
+            make -f Makefile.tools github-release
+            make -f Makefile.release publish-github-windows
 workflows:
   version: 2
   # currently we only build/publish for linux: macOS builds require non-FOSS
