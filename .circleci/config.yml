@@ -39,6 +39,9 @@ jobs:
           name: Install tools
           command: |
             make -f Makefile.tools github-release
+      - run:
+          name: Publish windows exe
+          command: |
             make -f Makefile.release publish-github-windows
 workflows:
   version: 2
