@@ -1,0 +1,15 @@
+<?xml version='1,0' encoding='windows-1252'?>
+<Wix xmln='http://schemas.microsoft.com/wix/2006/wi'>
+    <Product Name='aws-okta' Id='' UpgradeCode='' Language='1033' Codepage='1252' Version=''>
+        <Directory Id='ProgramFilesFolder' Name='PFiles'>
+            <Directory Id='INSTALLDIR' Name='Segment'>
+                <Component Id='MainExecutable' Guid=''>
+                    <File Id='aws-okta.exe' Name='aws-okta.exe' Source='aws-okta.exe' KeyPath='yes' />
+                </Component>
+            </Directory>
+        </Directory>
+        <Environment Id='UpdatePath' Name='PATH' Action='set' System='no' Part='last' Value='[INSTALLDIR]' />
+    </Product>
+    <Package Id='*' Keywords='Installer' Description='Installer for the aws-okta commandline tool'
+        InstallerVersion='' languages='1033' Compressed='yes' SummaryCodepage='1252' />
+</Wix>
