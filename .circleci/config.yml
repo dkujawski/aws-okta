@@ -74,14 +74,14 @@ jobs:
     working_directory: /go/src/github.com/segmentio/aws-okta
     steps:
       - checkout
-      - run:
-          name: Make distributables
-          command: |
-            make -f Makefile.release dist-windows
       - run: 
           name: Install MSI building tools
           command: |
             make -f Makefile.tools windows-wixl
+      - run:
+          name: Make distributables
+          command: |
+            make -f Makefile.release dist-windows
       - persist_to_workspace:
           root: .
           paths: ['dist/*']
