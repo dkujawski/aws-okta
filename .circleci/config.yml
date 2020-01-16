@@ -78,6 +78,10 @@ jobs:
           name: Make distributables
           command: |
             make -f Makefile.release dist-windows
+      - run: 
+          name: Install MSI building tools
+          command: |
+            make -f Makefile.tools windows-wixl
       - persist_to_workspace:
           root: .
           paths: ['dist/*']
