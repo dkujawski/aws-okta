@@ -158,7 +158,7 @@ dist-darwin: dist/aws-okta-$(VERSION)-darwin-amd64
 	
 dist-linux: dist/aws-okta-$(VERSION)-linux-amd64 dist/aws-okta_$(VERSION)_amd64.deb dist/aws-okta_$(VERSION)_amd64.rpm
 
-dist-windows: dist/aws-okta-$(VERSION)-windows.exe
+dist-windows: dist/aws-okta-$(VERSION).exe dist/aws-okta_$(VERSION).msi
 
 dist/aws-okta-$(VERSION).sha256sums: dist/aws-okta-$(VERSION)-darwin-amd64 dist/aws-okta-$(VERSION)-linux-amd64 dist/aws-okta_$(VERSION)_amd64.deb dist/aws-okta_$(VERSION)_amd64.rpm
 	sha256sum $^ | sed 's|dist/||g' > $@
@@ -166,11 +166,18 @@ dist/aws-okta-$(VERSION).sha256sums: dist/aws-okta-$(VERSION)-darwin-amd64 dist/
 dist/nfpm-$(VERSION).yaml: | dist/
 	sed -e "s/\$${VERSION}/$(VERSION)/g" -e "s|\$${DIST_BIN}|dist/aws-okta-$(VERSION)-linux-amd64|g" < nfpm.yaml.tmpl > $@
 
+dist/wixl-$(VERSION).wix: | dist/
+	sed -i -e "s/\$${VERSION}/$(VERSION)/g" WindowsMSI.wxs 
+
 dist/aws-okta_$(VERSION)_amd64.deb: dist/nfpm-$(VERSION).yaml dist/aws-okta-$(VERSION)-linux-amd64
 	nfpm -f $< pkg --target $@
 
 dist/aws-okta_$(VERSION)_amd64.rpm: dist/nfpm-$(VERSION).yaml dist/aws-okta-$(VERSION)-linux-amd64
 	nfpm -f $< pkg --target $@
+
+dist/aws-okta-$(VERSION).msi: dist/wixl-$(VERSION).wix dist/aws-okta-$(VERSION).exe
+	wixl -v WindowsMSI.wxs
+
 
 .PHONY: \
 	dist \

@@ -1,10 +1,10 @@
 <?xml version='1,0' encoding='windows-1252'?>
 <Wix xmln='http://schemas.microsoft.com/wix/2006/wi'>
-    <Product Name='aws-okta' Id='' UpgradeCode='' Language='1033' Codepage='1252' Version=''>
+    <Product Name='aws-okta' Id='' UpgradeCode='' Language='1033' Codepage='1252' Version='${VERSION}'>
         <Directory Id='ProgramFilesFolder' Name='PFiles'>
             <Directory Id='INSTALLDIR' Name='Segment'>
                 <Component Id='MainExecutable' Guid=''>
-                    <File Id='aws-okta.exe' Name='aws-okta.exe' Source='aws-okta.exe' KeyPath='yes' />
+                    <File Id='aws-okta.exe' Name='aws-okta.exe' Source='dist/aws-okta-${VERSION}.exe' KeyPath='yes' />
                 </Component>
             </Directory>
         </Directory>

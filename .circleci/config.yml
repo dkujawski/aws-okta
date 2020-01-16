@@ -125,6 +125,7 @@ jobs:
           name: Install tools
           command: |
             make -f Makefile.tools github-release
+            make -f Makefile.tools windows-wixl
       - run:
           name: Publish windows exe
           command: |

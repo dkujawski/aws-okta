@@ -28,6 +28,9 @@ github-release:
 	go env
 	/go/bin/github-release --version
 
+windows-wixl:
+	apt update -q && apt install wixl -yq
+
 package_cloud:
 	gem install package_cloud
 
