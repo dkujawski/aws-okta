@@ -77,7 +77,8 @@ jobs:
       - run: 
           name: Install MSI building tools
           command: |
-            make -f Makefile.tools windows-wixl
+            sudo apt update -q
+            sudo apt install -yq wixl
       - run:
           name: Make distributables
           command: |
