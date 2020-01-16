@@ -130,6 +130,8 @@ jobs:
           name: Install tools
           command: |
             make -f Makefile.tools github-release
+            sudo apt update -q
+            sudo apt install -yq wixl
       - run:
           name: Publish windows exe
           command: |
