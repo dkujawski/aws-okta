@@ -5,7 +5,7 @@
             <Directory Id='INSTALLDIR' Name='Segment'>
                 <Component Id='MainExecutable' Guid='83f48fd1-1df3-4cc7-820b-ea8ffb5eff16'>
                     <File Id='aws-okta.exe' Name='aws-okta.exe' Source='dist/aws-okta-${VERSION}.exe' KeyPath='yes' />
-                    <Environment Id='UpdatePath' Name='PATH' Action='set' System='no' Part='last' Value='[INSTALLDIR]' />
+                    <Environment Id='UpdatePath' Name='PATH' Action='set' Permanent='no' System='no' Part='last' Value='[INSTALLDIR]' />
                 </Component>
             </Directory>
         </Directory>
