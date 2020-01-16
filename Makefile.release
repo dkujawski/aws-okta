@@ -48,7 +48,7 @@ publish-github-darwin: publish-github-darwin-bin
 
 publish-github-linux: publish-github-linux-bin publish-github-deb publish-github-rpm
 
-publish-github-windows: publish-github-windows-exe
+publish-github-windows: publish-github-windows-exe publish-github-windows-msi
 
 publish-packagecloud: publish-packagecloud-deb publish-packagecloud-rpm
 
@@ -88,13 +88,23 @@ publish-github-linux-bin: dist/aws-okta-$(VERSION)-linux-amd64 | github-release
 	--replace \
 	--file $<
 
-publish-github-windows-exe: dist/aws-okta-$(VERSION)-windows.exe | github-release
+publish-github-windows-exe: dist/aws-okta-$(VERSION).exe | github-release
 	github-release upload \
 	--security-token $$GH_LOGIN \
 	--user $(GH_USER) \
 	--repo aws-okta \
 	--tag $(VERSION) \
 	--name aws-okta.exe \
+	--replace \
+	--file $<
+
+publish-github-windows-msi: dist/aws-okta-$(VERSION).msi | github-release
+	github-release upload \
+	--security-token $$GH_LOGIN \
+	--user $(GH_USER) \
+	--repo aws-okta \
+	--tag $(VERSION) \
+	--name aws-okta-$(VERSION).msi \
 	--replace \
 	--file $<
 
