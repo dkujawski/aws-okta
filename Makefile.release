@@ -168,7 +168,7 @@ dist-darwin: dist/aws-okta-$(VERSION)-darwin-amd64
 	
 dist-linux: dist/aws-okta-$(VERSION)-linux-amd64 dist/aws-okta_$(VERSION)_amd64.deb dist/aws-okta_$(VERSION)_amd64.rpm
 
-dist-windows: dist/aws-okta-$(VERSION).exe dist/aws-okta_$(VERSION).msi
+dist-windows: dist/aws-okta-$(VERSION).exe dist/aws-okta-$(VERSION).msi
 
 dist/aws-okta-$(VERSION).sha256sums: dist/aws-okta-$(VERSION)-darwin-amd64 dist/aws-okta-$(VERSION)-linux-amd64 dist/aws-okta_$(VERSION)_amd64.deb dist/aws-okta_$(VERSION)_amd64.rpm
 	sha256sum $^ | sed 's|dist/||g' > $@
