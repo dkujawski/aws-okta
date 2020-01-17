@@ -2,6 +2,7 @@
 <Wix xmlns='http://schemas.microsoft.com/wix/2006/wi'>
     <Product Id='8b80949a-e983-4b1c-b44a-1a0af668922' Name='aws-okta' Manufacturer="Segment" Version='${VERSION}' 
         UpgradeCode='b2a6bcaa-bda3-4c7f-8dec-d8665d7a9b69' Language='1033' Codepage='1252'>
+        <Media Id='1' Cabinet='aws-okta-${VERSION}.cab' EmbedCab='yes' />
         <Package Id='*' Keywords='Installer' Description='Installer for the aws-okta commandline tool' 
             Comments='See project repo at https://github.com/segmentio/aws-okta' Manufacturer="Segment" 
             InstallerVersion='100' Languages='1033' Compressed='yes' SummaryCodepage='1252' />

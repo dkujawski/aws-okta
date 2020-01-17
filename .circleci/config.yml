@@ -133,7 +133,7 @@ jobs:
             sudo apt update -q
             sudo apt install -yq wixl
       - run:
-          name: Publish windows exe
+          name: Publish Windows exe and msi to github
           command: |
             make -f Makefile.release publish-github-windows
 
