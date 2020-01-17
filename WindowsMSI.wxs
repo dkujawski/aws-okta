@@ -10,7 +10,6 @@
                 </Directory>
             </Directory>
         </Directory>
-        <Package Id='*' Keywords='Installer' Description='Installer for the aws-okta commandline tool'
-            InstallerVersion='${VERSION}' Languages='1033' Compressed='yes' SummaryCodepage='1252' />
+        <Package Id='*' Keywords='Installer' Description='Installer for the aws-okta commandline tool' Languages='1033' Compressed='yes' SummaryCodepage='1252' />
     </Product>
 </Wix>
