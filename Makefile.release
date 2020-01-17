@@ -186,7 +186,7 @@ dist/aws-okta_$(VERSION)_amd64.rpm: dist/nfpm-$(VERSION).yaml dist/aws-okta-$(VE
 	nfpm -f $< pkg --target $@
 
 dist/aws-okta-$(VERSION).msi: dist/wixl-$(VERSION).wix dist/aws-okta-$(VERSION).exe
-	wixl -v WindowsMSI.wxs -o $<
+	wixl -v WindowsMSI.wxs -o dist/aws-okta-$(VERSION).msi
 
 
 .PHONY: \
