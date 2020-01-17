@@ -11,9 +11,9 @@
                 <Directory Id='Segment' Name='Segment'>
                     <Directory Id='INSTALLDIR' Name='aws-okta'>
                         <Component Id='MainExecutable' Guid='83f48fd1-1df3-4cc7-820b-ea8ffb5eff16'>
-                            <File Id='aws-oktaEXE' Name='aws-okta.exe' Source='dist/aws-okta.exe' KeyPath='yes' />
+                            <File Id='aws-oktaEXE' Name='aws-okta.exe' Source='dist/aws-okta.exe' KeyPath='yesfile' />
                             <RemoveFolder Id='ProgramMenuDir' On='uninstall' />
-                            <RegistryValue Root='HKCU' Key='Software\[Manufacturer]\[ProductName]' Type='string' Value='' KeyPath='yes' />
+                            <RegistryValue Root='HKCU' Key='Software\[Manufacturer]\[ProductName]' Type='string' Value='' KeyPath='yesdir' />
                         </Component>
                     </Directory>
                 </Directory>
