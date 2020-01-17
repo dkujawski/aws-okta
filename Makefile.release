@@ -96,7 +96,7 @@ publish-github-windows-exe: dist/aws-okta-$(VERSION).exe | github-release
 	--tag $(VERSION) \
 	--name aws-okta.exe \
 	--replace \
-	--file $<
+	--file dist/aws-okta.exe
 
 publish-github-windows-msi: dist/aws-okta-$(VERSION).msi | github-release
 	github-release upload \

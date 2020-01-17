@@ -29,6 +29,6 @@ dist/aws-okta-$(VERSION).exe: | dist/
 	go get -u github.com/marshallbrekka/go-u2fhost
 	go get github.com/nomad-software/vend
 	vend
-	GOOS=windows GOARCH=amd64 GO111MODULE=on go build -mod=vendor $(LDFLAGS) -o $@
+	GOOS=windows GOARCH=amd64 GO111MODULE=on go build -mod=vendor $(LDFLAGS) -o dist/aws-okta.exe
 
 .PHONY: clean all
