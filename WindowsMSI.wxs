@@ -14,5 +14,8 @@
                 </Directory>
             </Directory>
         </Directory>
+        <Feature Id='Complete' Level='1'>
+            <ComponentRef Id='MainExecutable' />
+        </Feature>
     </Product>
 </Wix>
