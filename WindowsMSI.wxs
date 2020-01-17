@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='windows-1252'?>
 <Wix xmlns='http://schemas.microsoft.com/wix/2006/wi'>
     <Product Name='aws-okta' Id='8b80949a-e983-4b1c-b44a-1a0af668922f' UpgradeCode='b2a6bcaa-bda3-4c7f-8dec-d8665d7a9b69' Language='1033' Codepage='1252' Version='${VERSION}'>
-        <Directory Id='TARGETDIR' Name='SourceDir'
+        <Directory Id='TARGETDIR' Name='SourceDir'>
             <Directory Id='ProgramFilesFolder' Name='PFiles'>
                 <Directory Id='INSTALLDIR' Name='Segment'>
                     <Component Id='MainExecutable' Guid='83f48fd1-1df3-4cc7-820b-ea8ffb5eff16'>
