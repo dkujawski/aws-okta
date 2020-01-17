@@ -1,15 +1,18 @@
 <?xml version='1.0' encoding='windows-1252'?>
 <Wix xmlns='http://schemas.microsoft.com/wix/2006/wi'>
-    <Product Name='aws-okta' Id='8b80949a-e983-4b1c-b44a-1a0af668922' Manufacturer="Segment" UpgradeCode='b2a6bcaa-bda3-4c7f-8dec-d8665d7a9b69' Language='1033' Codepage='1252' Version='${VERSION}'>
+    <Product Id='8b80949a-e983-4b1c-b44a-1a0af668922' Name='aws-okta' Manufacturer="Segment" Version='${VERSION}' 
+        UpgradeCode='b2a6bcaa-bda3-4c7f-8dec-d8665d7a9b69' Language='1033' Codepage='1252'>
+        <Package Id='*' Keywords='Installer' Description='Installer for the aws-okta commandline tool' 
+            Comments='See project repo at https://github.com/segmentio/aws-okta' Manufacturer="Segment" 
+            InstallerVersion='100' Languages='1033' Compressed='yes' SummaryCodepage='1252' />
         <Directory Id='TARGETDIR' Name='SourceDir'>
             <Directory Id='ProgramFilesFolder' Name='PFiles'>
                 <Directory Id='INSTALLDIR' Name='Segment'>
                     <Component Id='MainExecutable' Guid='83f48fd1-1df3-4cc7-820b-ea8ffb5eff16'>
-                        <File Id='aws-okta.exe' Name='aws-okta.exe' Source='dist/aws-okta.exe' KeyPath='yes' />
+                        <File Id='aws-oktaEXE' Name='aws-okta.exe' Source='dist/aws-okta.exe' KeyPath='yes' />
                     </Component>
                 </Directory>
             </Directory>
         </Directory>
-        <Package Id='*' Keywords='Installer' Description='Installer for the aws-okta commandline tool' Languages='1033' Compressed='no' SummaryCodepage='1252' />
     </Product>
 </Wix>
