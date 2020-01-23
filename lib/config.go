@@ -12,32 +12,44 @@ import (
 	"github.com/vaughan0/go-ini"
 )
 
+// Profiles container to store found/existing configuration profiles
 type Profiles map[string]map[string]string
 
 type config interface {
 	Parse() (Profiles, error)
 }
 
-type fileConfig struct {
+// FileConfig container around the aws config file
+type FileConfig struct {
 	file string
 }
 
-func NewConfigFromEnv() (config, error) {
+func getPathToAWSConfigFile() (string, error) {
 	file := os.Getenv("AWS_CONFIG_FILE")
 	if file == "" {
 		home, err := homedir.Dir()
 		if err != nil {
-			return nil, err
+			return "", err
 		}
 		file = filepath.Join(home, "/.aws/config")
-		if _, err := os.Stat(file); os.IsNotExist(err) {
-			file = ""
-		}
 	}
-	return &fileConfig{file: file}, nil
+	return file, nil
 }
 
-func (c *fileConfig) Parse() (Profiles, error) {
+// NewConfigFromEnv initialize a FileConfig struct by collect the file path from environment or use ~/.aws/config.
+func NewConfigFromEnv() (*FileConfig, error) {
+	file, err := getPathToAWSConfigFile()
+	if err != nil {
+		return nil, err
+	}
+	if _, err := os.Stat(file); os.IsNotExist(err) {
+		file = ""
+	}
+	return &FileConfig{file: file}, nil
+}
+
+// Parse load and read the config file, return the profiles found
+func (c *FileConfig) Parse() (Profiles, error) {
 	if c.file == "" {
 		return nil, nil
 	}
@@ -66,28 +78,29 @@ func sourceProfile(p string, from Profiles) string {
 	return p
 }
 
-func (p Profiles) GetValue(profile string, config_key string) (string, string, error) {
-	config_value, ok := p[profile][config_key]
+// GetValue return the value found in the config file for the given profile
+func (p Profiles) GetValue(profile string, configKey string) (string, string, error) {
+	configValue, ok := p[profile][configKey]
 	if ok {
-		return config_value, profile, nil
+		return configValue, profile, nil
 	}
 
 	// Lookup from the `source_profile`, if it exists
 	profile, ok = p[profile]["source_profile"]
 	if ok {
-		config_value, ok := p[profile][config_key]
+		configValue, ok := p[profile][configKey]
 		if ok {
-			return config_value, profile, nil
+			return configValue, profile, nil
 		}
 
 	}
 
 	// Fallback to `okta` if no profile supplies the value
 	profile = "okta"
-	config_value, ok = p[profile][config_key]
+	configValue, ok = p[profile][configKey]
 	if ok {
-		return config_value, profile, nil
+		return configValue, profile, nil
 	}
 
-	return "", "", fmt.Errorf("Could not find %s in %s, source profile, or okta", config_key, profile)
+	return "", "", fmt.Errorf("Could not find %s in %s, source profile, or okta", configKey, profile)
 }
