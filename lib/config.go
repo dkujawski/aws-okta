@@ -12,6 +12,9 @@ import (
 	"github.com/vaughan0/go-ini"
 )
 
+const envKeyAWSConfigFile = "AWS_CONFIG_FILE"
+const baseNameAWSConfigFile = "/.aws/config"
+
 // Profiles container to store found/existing configuration profiles
 type Profiles map[string]map[string]string
 
@@ -24,34 +27,23 @@ type FileConfig struct {
 	file string
 }
 
-func getPathToAWSConfigFile() (string, error) {
-	file := os.Getenv("AWS_CONFIG_FILE")
+// NewConfigFromEnv initialize a FileConfig struct by collect the file path from environment or use ~/.aws/config.
+func NewConfigFromEnv() (*FileConfig, error) {
+	file := os.Getenv(envKeyAWSConfigFile)
 	if file == "" {
 		home, err := homedir.Dir()
 		if err != nil {
-			return "", err
+			return nil, err
 		}
-		file = filepath.Join(home, "/.aws/config")
-	}
-	return file, nil
-}
-
-// NewConfigFromEnv initialize a FileConfig struct by collect the file path from environment or use ~/.aws/config.
-func NewConfigFromEnv() (*FileConfig, error) {
-	file, err := getPathToAWSConfigFile()
-	if err != nil {
-		return nil, err
-	}
-	if _, err := os.Stat(file); os.IsNotExist(err) {
-		file = ""
+		file = filepath.Join(home, baseNameAWSConfigFile)
 	}
 	return &FileConfig{file: file}, nil
 }
 
 // Parse load and read the config file, return the profiles found
 func (c *FileConfig) Parse() (Profiles, error) {
-	if c.file == "" {
-		return nil, nil
+	if _, err := os.Stat(c.file); os.IsNotExist(err) {
+		return nil, err
 	}
 
 	log.Debugf("Parsing config file %s", c.file)
