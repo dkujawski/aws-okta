@@ -8,34 +8,34 @@ import (
 	"github.com/mitchellh/go-homedir"
 )
 
-func TestGetPathToAWSConfigFile(t *testing.T) {
+func TestNewConfigFromEnv(t *testing.T) {
 	fakeEnvPath := "/fake/env/path/to/.file/config"
-	if err := os.Setenv("AWS_CONFIG_FILE", fakeEnvPath); err != nil {
+	if err := os.Setenv(envKeyAWSConfigFile, fakeEnvPath); err != nil {
 		t.Error("Unable to set env test value")
 	}
 	t.Run("get aws path from env", func(t *testing.T) {
-		got, err := getPathToAWSConfigFile()
+		got, err := NewConfigFromEnv()
 		if err != nil {
 			t.Error(err)
 		}
-		if got != fakeEnvPath {
+		if got.file != fakeEnvPath {
 			t.Errorf("unexpected error! wanted '%s' got '%s'", fakeEnvPath, got)
 		}
 	})
-	if err := os.Setenv("AWS_CONFIG_FILE", ""); err != nil {
+	if err := os.Setenv(envKeyAWSConfigFile, ""); err != nil {
 		t.Error("Unable to set empty env value")
 	}
 	home, err := homedir.Dir()
 	if err != nil {
 		t.Error(err)
 	}
-	expectedPath := filepath.Join(home, "/.aws/config")
+	expectedPath := filepath.Join(home, baseNameAWSConfigFile)
 	t.Run("get default config path for OS", func(t *testing.T) {
-		got, err := getPathToAWSConfigFile()
+		got, err := NewConfigFromEnv()
 		if err != nil {
 			t.Error(err)
 		}
-		if got != expectedPath {
+		if got.file != expectedPath {
 			t.Errorf("unexpected error! wanted '%s' got '%s'", expectedPath, got)
 		}
 	})
