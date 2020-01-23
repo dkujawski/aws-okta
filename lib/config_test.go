@@ -1,6 +1,7 @@
 package lib
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -84,6 +85,47 @@ output = json
 		}
 	})
 
+}
+
+func TestSourceProfile(t *testing.T) {
+	src := `
+[profile nf-sandbox2]
+aws_saml_url = home/amazon_aws/SAML/272
+role_arn = arn:aws:iam::<account-id>:role/<okta-role-name>
+assume_role_ttl = 12h
+session_ttl = 12h
+
+[profile nf-sandbox2-extra-role]
+source_profile = nf-sandbox2
+role_arn = arn:aws:iam::<account-id>:role/<okta-role-extra>
+assume_role_ttl = 12h
+session_ttl = 12h
+	`
+	f, err := ini.Load(strings.NewReader(src))
+	if err != nil {
+		t.Error(err)
+	}
+	fc := FileConfig{
+		file: "",
+		fh:   &f,
+	}
+	p, err := fc.Parse()
+	if err != nil {
+		t.Error(err)
+	}
+	testCases := map[string]string{
+		"nf-sandbox2":            "nf-sandbox2",
+		"nf-sandbox2-extra-role": "nf-sandbox2",
+		"missing-key":            "missing-key",
+	}
+	for profile, expected := range testCases {
+		t.Run(fmt.Sprintf("source profile %s", profile), func(t *testing.T) {
+			got := sourceProfile(profile, p)
+			if got != expected {
+				t.Errorf("unexpected failure wanted %s got %s", expected, got)
+			}
+		})
+	}
 }
 
 func TestGetConfigValue(t *testing.T) {
