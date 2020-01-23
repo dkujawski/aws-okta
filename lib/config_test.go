@@ -3,9 +3,12 @@ package lib
 import (
 	"os"
 	"path/filepath"
+	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/mitchellh/go-homedir"
+	"github.com/vaughan0/go-ini"
 )
 
 func TestNewConfigFromEnv(t *testing.T) {
@@ -19,7 +22,7 @@ func TestNewConfigFromEnv(t *testing.T) {
 			t.Error(err)
 		}
 		if got.file != fakeEnvPath {
-			t.Errorf("unexpected error! wanted '%s' got '%s'", fakeEnvPath, got)
+			t.Errorf("unexpected error! wanted '%s' got '%s'", fakeEnvPath, got.file)
 		}
 	})
 	if err := os.Setenv(envKeyAWSConfigFile, ""); err != nil {
@@ -36,9 +39,51 @@ func TestNewConfigFromEnv(t *testing.T) {
 			t.Error(err)
 		}
 		if got.file != expectedPath {
-			t.Errorf("unexpected error! wanted '%s' got '%s'", expectedPath, got)
+			t.Errorf("unexpected error! wanted '%s' got '%s'", expectedPath, got.file)
 		}
 	})
+}
+
+func TestParse(t *testing.T) {
+	src := `
+[profile nf-sandbox2]
+aws_saml_url = home/amazon_aws/SAML/272
+role_arn = arn:aws:iam::<account-id>:role/<okta-role-name>
+assume_role_ttl = 12h
+session_ttl = 12h
+
+[default]
+region = us-west-2
+output = json	
+	`
+	f, err := ini.Load(strings.NewReader(src))
+	if err != nil {
+		t.Error(err)
+	}
+	fc := FileConfig{
+		file: "",
+		fh:   &f,
+	}
+	expected := Profiles{
+		"okta":    map[string]string{},
+		"default": map[string]string{"output": "json", "region": "us-west-2"},
+		"nf-sandbox2": map[string]string{
+			"assume_role_ttl": "12h",
+			"aws_saml_url":    "home/amazon_aws/SAML/272",
+			"role_arn":        "arn:aws:iam::<account-id>:role/<okta-role-name>",
+			"session_ttl":     "12h",
+		},
+	}
+	t.Run("parse config", func(t *testing.T) {
+		got, err := fc.Parse()
+		if err != nil {
+			t.Error(err)
+		}
+		if !reflect.DeepEqual(got, expected) {
+			t.Errorf("unexpected failure wanted %#v got %#v", expected, got)
+		}
+	})
+
 }
 
 func TestGetConfigValue(t *testing.T) {

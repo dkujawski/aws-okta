@@ -25,6 +25,7 @@ type config interface {
 // FileConfig container around the aws config file
 type FileConfig struct {
 	file string
+	fh   *ini.File
 }
 
 // NewConfigFromEnv initialize a FileConfig struct by collect the file path from environment or use ~/.aws/config.
@@ -40,20 +41,25 @@ func NewConfigFromEnv() (*FileConfig, error) {
 	return &FileConfig{file: file}, nil
 }
 
-// Parse load and read the config file, return the profiles found
-func (c *FileConfig) Parse() (Profiles, error) {
-	if _, err := os.Stat(c.file); os.IsNotExist(err) {
-		return nil, err
-	}
-
-	log.Debugf("Parsing config file %s", c.file)
+func (c *FileConfig) loadIniFile() error {
 	f, err := ini.LoadFile(c.file)
 	if err != nil {
-		return nil, fmt.Errorf("Error parsing config file %q: %v", c.file, err)
+		return fmt.Errorf("Error parsing config file %q: %v", c.file, err)
 	}
+	c.fh = &f
+	return nil
+}
 
+// Parse load and read the config file, return the profiles found
+func (c *FileConfig) Parse() (Profiles, error) {
+	log.Debugf("Parsing config file %s", c.file)
+	if c.fh == nil {
+		if err := c.loadIniFile(); err != nil {
+			return nil, err
+		}
+	}
 	profiles := Profiles{"okta": map[string]string{}}
-	for sectionName, section := range f {
+	for sectionName, section := range *c.fh {
 		profiles[strings.TrimPrefix(sectionName, "profile ")] = section
 	}
 
