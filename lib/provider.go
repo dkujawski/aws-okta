@@ -118,6 +118,7 @@ func NewProvider(k keyring.Keyring, profile string, opts ProviderOptions) (*Prov
 	}, nil
 }
 
+// Retrieve is the main method that collects credentials from the auth source
 func (p *Provider) Retrieve() (credentials.Value, error) {
 
 	window := p.ExpiryWindow
@@ -193,6 +194,7 @@ func (p *Provider) Retrieve() (credentials.Value, error) {
 	return value, nil
 }
 
+// GetExpiration return the expires time.Time
 func (p *Provider) GetExpiration() time.Time {
 	return p.expires
 }
