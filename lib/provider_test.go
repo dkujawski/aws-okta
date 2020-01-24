@@ -2,11 +2,14 @@ package lib
 
 import (
 	"fmt"
+	"math/rand"
 	"reflect"
 	"testing"
 	"time"
 
 	"github.com/99designs/keyring"
+	"github.com/aws/aws-sdk-go/service/sts"
+	"github.com/bmizerany/assert"
 	"github.com/segmentio/aws-okta/sessioncache"
 )
 
@@ -88,18 +91,7 @@ func TestProviderOptionsValidate(t *testing.T) {
 }
 
 func TestNewProvider(t *testing.T) {
-	kr, err := keyring.Open(keyring.Config{
-		AllowedBackends:          nil,
-		KeychainTrustApplication: true,
-		// this keychain name is for backwards compatibility
-		ServiceName:             "aws-okta-login",
-		LibSecretCollectionName: "awsvault",
-		FileDir:                 "~/.aws-okta/",
-		FilePasswordFunc:        keyringPrompt,
-	})
-	if err != nil {
-		t.Error(err)
-	}
+	kr := keyring.NewArrayKeyring([]keyring.Item{})
 	skis := reflect.TypeOf(&sessioncache.SingleKrItemStore{Keyring: kr})
 	kipss := reflect.TypeOf(&sessioncache.KrItemPerSessionStore{Keyring: kr})
 
@@ -112,7 +104,7 @@ func TestNewProvider(t *testing.T) {
 		Profiles:               Profiles{},
 		MFAConfig:              MFAConfig{},
 		AssumeRoleArn:          "",
-		SessionCacheSingleItem: false,
+		SessionCacheSingleItem: true,
 	}
 	for _, si := range []bool{true, false} {
 		t.Run(fmt.Sprintf("NewProvider with SingleKrItemStore: %t", si), func(t *testing.T) {
@@ -133,4 +125,68 @@ func TestNewProvider(t *testing.T) {
 			}
 		})
 	}
+}
+
+var theDistantFuture = time.Date(3000, 0, 0, 0, 0, 0, 0, time.UTC)
+
+func TestProviderRetrieve(t *testing.T) {
+	kr := keyring.NewArrayKeyring([]keyring.Item{})
+	skis := sessioncache.SingleKrItemStore{Keyring: kr}
+	//kipss := sessioncache.KrItemPerSessionStore{Keyring: kr}
+
+	profile := "test-provider-retrieve"
+	aki := fmt.Sprintf("%d", rand.Intn(100000))
+	sak := fmt.Sprintf("%d", rand.Intn(100000))
+	sst := fmt.Sprintf("%d", rand.Intn(100000))
+	sess := sessioncache.Session{
+		Name: profile,
+		Credentials: sts.Credentials{
+			AccessKeyId:     &aki,
+			SecretAccessKey: &sak,
+			SessionToken:    &sst,
+			Expiration:      &theDistantFuture,
+		},
+	}
+	po := ProviderOptions{
+		SessionDuration:    DefaultSessionDuration,
+		AssumeRoleDuration: DefaultAssumeRoleDuration,
+		ExpiryWindow:       time.Minute * 5,
+		Profiles: Profiles{
+			profile: map[string]string{
+				"aws_saml_url":    "home/amazon_aws/SAML/272",
+				"role_arn":        "arn:aws:iam::<account-id>:role/<okta-role-name>",
+				"session_ttl":     "12h",
+				"assume_role_ttl": "12h",
+			},
+		},
+		MFAConfig:              MFAConfig{},
+		AssumeRoleArn:          "",
+		SessionCacheSingleItem: true,
+	}
+
+	p, err := NewProvider(kr, profile, po)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	key := sessioncache.KeyWithProfileARN{
+		ProfileName: profile,
+		ProfileConf: po.Profiles[profile],
+		Duration:    p.SessionDuration,
+		ProfileARN:  p.AssumeRoleArn,
+	}
+
+	err = skis.Put(&key, &sess)
+	if err != nil {
+		t.Fatalf("error initializing store on Put %s", err)
+	}
+
+	cv, err := p.Retrieve()
+	if err != nil {
+		t.Errorf("unexpected error on retrieve %s", err)
+	}
+	assert.Equal(t, aki, cv.AccessKeyID)
+	assert.Equal(t, sak, cv.SecretAccessKey)
+	assert.Equal(t, sst, cv.SessionToken)
+	assert.Equal(t, "okta", cv.ProviderName)
 }
