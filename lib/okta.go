@@ -529,6 +529,8 @@ func (o *OktaClient) challengeMFA() (err error) {
 	return
 }
 
+// GetFactorId return the factor ID when the FactorType and Provider data are set correctly otherwise error
+// the point of this function seems to be a guard against unsupported MFA methods
 func GetFactorId(f *OktaUserAuthnFactor) (id string, err error) {
 	switch f.FactorType {
 	case "web":
