@@ -10,6 +10,8 @@ func keyringPrompt(prompt string) (string, error) {
 	return PromptWithOutput(prompt, true, os.Stderr)
 }
 
+// OpenKeyring compose the keyring.Config and handoff to the keyring library
+// to get a functional keyring interaction object
 func OpenKeyring(allowedBackends []keyring.BackendType) (kr keyring.Keyring, err error) {
 	kr, err = keyring.Open(keyring.Config{
 		AllowedBackends:          allowedBackends,
