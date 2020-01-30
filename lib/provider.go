@@ -350,7 +350,7 @@ func (p *Provider) roleSessionName() string {
 	return fmt.Sprintf("%d", time.Now().UTC().UnixNano())
 }
 
-// GetRoleARN uses temporary credentials to call AWS's get-caller-identity and
+// GetRoleARNWithRegion uses temporary credentials to call AWS's get-caller-identity and
 // returns the assumed role's ARN
 func (p *Provider) GetRoleARNWithRegion(creds credentials.Value) (string, error) {
 	config := aws.Config{Credentials: credentials.NewStaticCredentials(

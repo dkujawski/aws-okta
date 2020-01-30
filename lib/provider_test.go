@@ -190,3 +190,113 @@ func TestProviderRetrieve(t *testing.T) {
 	assert.Equal(t, sst, cv.SessionToken)
 	assert.Equal(t, "okta", cv.ProviderName)
 }
+
+func TestProviderGetOps(t *testing.T) {
+	kr := keyring.NewArrayKeyring([]keyring.Item{})
+	skis := sessioncache.SingleKrItemStore{Keyring: kr}
+	//kipss := sessioncache.KrItemPerSessionStore{Keyring: kr}
+
+	profile := "test-provider-retrieve"
+	aki := fmt.Sprintf("%d", rand.Intn(100000))
+	sak := fmt.Sprintf("%d", rand.Intn(100000))
+	sst := fmt.Sprintf("%d", rand.Intn(100000))
+	sess := sessioncache.Session{
+		Name: profile,
+		Credentials: sts.Credentials{
+			AccessKeyId:     &aki,
+			SecretAccessKey: &sak,
+			SessionToken:    &sst,
+			Expiration:      &theDistantFuture,
+		},
+	}
+	po := ProviderOptions{
+		SessionDuration:    DefaultSessionDuration,
+		AssumeRoleDuration: DefaultAssumeRoleDuration,
+		ExpiryWindow:       time.Minute * 5,
+		Profiles: Profiles{
+			profile: map[string]string{
+				"aws_saml_url":    "home/amazon_aws/SAML/272",
+				"role_arn":        "arn:aws:iam::<account-id>:role/<okta-role-name>",
+				"session_ttl":     "12h",
+				"assume_role_ttl": "12h",
+			},
+		},
+		MFAConfig:              MFAConfig{},
+		AssumeRoleArn:          "",
+		SessionCacheSingleItem: true,
+	}
+	p, err := NewProvider(kr, profile, po)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	key := sessioncache.KeyWithProfileARN{
+		ProfileName: profile,
+		ProfileConf: po.Profiles[profile],
+		Duration:    p.SessionDuration,
+		ProfileARN:  p.AssumeRoleArn,
+	}
+
+	err = skis.Put(&key, &sess)
+	if err != nil {
+		t.Fatalf("error initializing store on Put %s", err)
+	}
+
+	_, err = p.Retrieve()
+	if err != nil {
+		t.Errorf("unexpected error on retrieve %s", err)
+	}
+
+	t.Run("GetExpiration", func(t *testing.T) {
+		assert.Equal(t, p.GetExpiration(), theDistantFuture)
+	})
+
+	t.Run("getSamlURL", func(t *testing.T) {
+		su, err := p.getSamlURL()
+		if err != nil {
+			t.Fatal(err)
+		}
+		assert.Equal(t, su, "home/amazon_aws/SAML/272")
+	})
+
+	t.Run("getOktaSessionCookieKey", func(t *testing.T) {
+		assert.Equal(t, p.getOktaSessionCookieKey(), "okta-session-cookie")
+	})
+
+	t.Run("getOktaAccountName", func(t *testing.T) {
+		assert.Equal(t, p.getOktaAccountName(), "okta-creds")
+	})
+	/*
+		// setup a test server to mock the actual http get
+		server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+			assert.Equal(t, req.URL.String(), "/some/path")
+			rw.WriteHeader(http.StatusOK)
+		}))
+		defer server.Close()
+
+		org := fmt.Sprintf("%d", rand.Intn(100000))
+		usr := fmt.Sprintf("%d", rand.Intn(100000))
+		pwd := fmt.Sprintf("%d", rand.Intn(100000))
+		oc := OktaCreds{
+			Organization: org,
+			Username:     usr,
+			Password:     pwd,
+			Domain:       server.URL,
+		}
+
+		err = AddCredsToKeyring("okta-creds", kr, &oc, MFAConfig{})
+		if err != nil {
+			t.Fatal(err)
+		}
+			t.Run("getSamlSessionCreds", func(t *testing.T) {
+				cv, err := p.getSamlSessionCreds()
+				if err != nil {
+					t.Fatal(err)
+				}
+				assert.Equal(t, aki, cv.AccessKeyId)
+				assert.Equal(t, sak, cv.SecretAccessKey)
+				assert.Equal(t, sst, cv.SessionToken)
+				assert.Equal(t, theDistantFuture, cv.Expiration)
+			})
+	*/
+}
