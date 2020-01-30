@@ -5,8 +5,8 @@ import (
 	"encoding/xml"
 	"errors"
 	"fmt"
-	"regexp"
 	"os"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -20,6 +20,7 @@ import (
 // https://docs.aws.amazon.com/IAM/latest/UserGuide/list_identityandaccessmanagement.html
 var awsRoleARNRegex = regexp.MustCompile(`arn:[a-z-]+:iam::(\d{12}):role/(.*)`)
 
+// GetRoleFromSAML returns principle and role
 func GetRoleFromSAML(resp *saml.Response, profileARN string) (string, string, error) {
 
 	roles, err := GetAssumableRolesFromSAML(resp)
@@ -33,6 +34,7 @@ func GetRoleFromSAML(resp *saml.Response, profileARN string) (string, string, er
 	return role.Principal, role.Role, nil
 }
 
+// GetAssumableRolesFromSAML return roleList
 func GetAssumableRolesFromSAML(resp *saml.Response) (saml.AssumableRoles, error) {
 	roleList := []saml.AssumableRole{}
 
@@ -69,7 +71,6 @@ func GetAssumableRolesFromSAML(resp *saml.Response) (saml.AssumableRoles, error)
 				} else {
 					return saml.AssumableRoles{}, fmt.Errorf("Unable to get roles from %s", v.Value)
 				}
-
 			}
 		}
 	}
@@ -168,6 +169,9 @@ func GetNode(n *html.Node, name string) (val string, node *html.Node) {
 			}
 			if a.Key == "value" && isMatch {
 				val = a.Val
+				// TODO: can we break out of the loop here?
+				// will that save some cycles?
+				// how big are these structures?
 			}
 		}
 	}
