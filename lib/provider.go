@@ -21,15 +21,21 @@ import (
 )
 
 const (
-	MaxSessionDuration    = time.Hour * 24 * 90
-	MinSessionDuration    = time.Minute * 15
+	// MaxSessionDuration the SessionDuration upper limit is set to 90 days
+	MaxSessionDuration = time.Hour * 24 * 90
+	// MinSessionDuration the SessionDuration lower limit is set to 15 minutes
+	MinSessionDuration = time.Minute * 15
+	// MinAssumeRoleDuration the AssumeRole lower limit is set to 15 minutes
 	MinAssumeRoleDuration = time.Minute * 15
+	// MaxAssumeRoleDuration AssumeRole upper limit is set to 12 hours
 	MaxAssumeRoleDuration = time.Hour * 12
-
-	DefaultSessionDuration    = time.Hour * 4
+	// DefaultSessionDuration default currently set to 4 hours
+	DefaultSessionDuration = time.Hour * 4
+	// DefaultAssumeRoleDuration default currently set to 15 minutes
 	DefaultAssumeRoleDuration = time.Minute * 15
 )
 
+// ProviderOptions container for common provider configuration settings and validation logic
 type ProviderOptions struct {
 	SessionDuration    time.Duration
 	AssumeRoleDuration time.Duration
@@ -42,6 +48,7 @@ type ProviderOptions struct {
 	SessionCacheSingleItem bool
 }
 
+// Validate ensure that user configured values are within acceptable limits
 func (o ProviderOptions) Validate() error {
 	if o.SessionDuration < MinSessionDuration {
 		return errors.New("Minimum session duration is " + MinSessionDuration.String())
@@ -58,6 +65,8 @@ func (o ProviderOptions) Validate() error {
 	return nil
 }
 
+// ApplyDefaults set SessionDuration and AssumeRoleDuration to default values
+// if they are not set already
 func (o ProviderOptions) ApplyDefaults() ProviderOptions {
 	if o.AssumeRoleDuration == 0 {
 		o.AssumeRoleDuration = DefaultAssumeRoleDuration
@@ -84,6 +93,7 @@ type Provider struct {
 	defaultRoleSessionName string
 }
 
+// NewProvider assemble a new Provider struct for use
 func NewProvider(k keyring.Keyring, profile string, opts ProviderOptions) (*Provider, error) {
 	opts = opts.ApplyDefaults()
 	if err := opts.Validate(); err != nil {
@@ -93,10 +103,10 @@ func NewProvider(k keyring.Keyring, profile string, opts ProviderOptions) (*Prov
 
 	if opts.SessionCacheSingleItem {
 		log.Debugf("Using SingleKrItemStore")
-		sessions = &sessioncache.SingleKrItemStore{k}
+		sessions = &sessioncache.SingleKrItemStore{Keyring: k}
 	} else {
 		log.Debugf("Using KrItemPerSessionStore")
-		sessions = &sessioncache.KrItemPerSessionStore{k}
+		sessions = &sessioncache.KrItemPerSessionStore{Keyring: k}
 	}
 
 	return &Provider{
@@ -108,6 +118,7 @@ func NewProvider(k keyring.Keyring, profile string, opts ProviderOptions) (*Prov
 	}, nil
 }
 
+// Retrieve is the main method that collects credentials from the auth source
 func (p *Provider) Retrieve() (credentials.Value, error) {
 
 	window := p.ExpiryWindow
@@ -183,6 +194,7 @@ func (p *Provider) Retrieve() (credentials.Value, error) {
 	return value, nil
 }
 
+// GetExpiration return the expires time.Time
 func (p *Provider) GetExpiration() time.Time {
 	return p.expires
 }
@@ -338,7 +350,7 @@ func (p *Provider) roleSessionName() string {
 	return fmt.Sprintf("%d", time.Now().UTC().UnixNano())
 }
 
-// GetRoleARN uses temporary credentials to call AWS's get-caller-identity and
+// GetRoleARNWithRegion uses temporary credentials to call AWS's get-caller-identity and
 // returns the assumed role's ARN
 func (p *Provider) GetRoleARNWithRegion(creds credentials.Value) (string, error) {
 	config := aws.Config{Credentials: credentials.NewStaticCredentials(
