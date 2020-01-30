@@ -1,9 +1,13 @@
 package lib
 
 import (
+	"encoding/json"
+	"errors"
+	"fmt"
 	"os"
 
 	"github.com/99designs/keyring"
+	log "github.com/sirupsen/logrus"
 )
 
 func keyringPrompt(prompt string) (string, error) {
@@ -24,4 +28,34 @@ func OpenKeyring(allowedBackends []keyring.BackendType) (kr keyring.Keyring, err
 	})
 
 	return
+}
+
+// AddCredsToKeyring store credentials into OS keyring for later use
+func AddCredsToKeyring(key string, kr keyring.Keyring, creds *OktaCreds, mfaConfig MFAConfig) error {
+
+	if err := creds.Validate(mfaConfig); err != nil {
+		log.Debugf("Failed to validate credentials: %s", err)
+		return fmt.Errorf("Failed to validate credentials %s", err)
+	}
+
+	encoded, err := json.Marshal(creds)
+	if err != nil {
+		return err
+	}
+
+	item := keyring.Item{
+		Key:                         key,
+		Data:                        encoded,
+		Label:                       "okta credentials",
+		KeychainNotTrustApplication: false,
+	}
+
+	if err := kr.Set(item); err != nil {
+		log.Debugf("Failed to add user to keyring: %s", err)
+		return errors.New("Failed to add user to keyring")
+	}
+
+	log.Infof("Added credentials for user %s", creds.Username)
+	return nil
+
 }
