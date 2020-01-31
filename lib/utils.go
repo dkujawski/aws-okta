@@ -27,6 +27,7 @@ func GetRoleFromSAML(resp *saml.Response, profileARN string) (string, string, er
 	if err != nil {
 		return "", "", err
 	}
+	log.Debugf("Found roles from SAML: %#v", roles)
 	role, err := GetRole(roles, profileARN)
 	if err != nil {
 		return "", "", err
@@ -91,7 +92,7 @@ func GetRole(roleList saml.AssumableRoles, profileARN string) (saml.AssumableRol
 				return arole, nil
 			}
 		}
-		return saml.AssumableRole{}, fmt.Errorf("ARN isn't valid")
+		return saml.AssumableRole{}, fmt.Errorf("ARN isn't valid %s", profileARN)
 	}
 
 	// if the user only has one role assume that role without prompting.
