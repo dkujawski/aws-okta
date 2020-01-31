@@ -84,16 +84,6 @@ type OktaCreds struct {
 	Domain       string
 }
 
-<<<<<<< HEAD
-// OktaCookies maps the session with the device token
-type OktaCookies struct {
-	Session     string
-	DeviceToken string
-}
-
-// Validate create an Okta client and authenticate the user
-=======
->>>>>>> parent of 18e92f7... feat: Persist device token cookie in keystore to prevent repeated MFA prompt (#259)
 func (c *OktaCreds) Validate(mfaConfig MFAConfig) error {
 	// OktaClient assumes we're doing some AWS SAML calls, but Validate doesn't
 	o, err := NewOktaClient(*c, "", "", mfaConfig)
@@ -123,17 +113,6 @@ func GetOktaDomain(region string) (string, error) {
 
 // NewOktaClient will convert the sessionCookie string into a OktaCookies struct and pass the rest over to NewOktaClient2
 func NewOktaClient(creds OktaCreds, oktaAwsSAMLUrl string, sessionCookie string, mfaConfig MFAConfig) (*OktaClient, error) {
-<<<<<<< HEAD
-	var cookies OktaCookies
-	cookies.Session = sessionCookie
-
-	return NewOktaClient2(creds, oktaAwsSAMLUrl, cookies, mfaConfig)
-}
-
-// NewOktaClient2 assemble credentials, urls, cookies, and MFA information into single structure
-func NewOktaClient2(creds OktaCreds, oktaAwsSAMLUrl string, cookies OktaCookies, mfaConfig MFAConfig) (*OktaClient, error) {
-=======
->>>>>>> parent of 18e92f7... feat: Persist device token cookie in keystore to prevent repeated MFA prompt (#259)
 	var domain string
 
 	// maintain compatibility for deprecated creds.Organization
@@ -219,25 +198,7 @@ func (o *OktaClient) AuthenticateUser() error {
 	return nil
 }
 
-<<<<<<< HEAD
-// AuthenticateProfile pass off data to AuthenticateProfileWithRegion using an empty string for region
-func (o *OktaClient) AuthenticateProfile(profileARN string, duration time.Duration) (sts.Credentials, string, error) {
-	return o.AuthenticateProfileWithRegion(profileARN, duration, "")
-}
-
-// AuthenticateProfileWithRegion pass off params to AuthenticateProfile3
-// augment return values by returning credentials with the session cookie instead of the OktaCookies struct
 func (o *OktaClient) AuthenticateProfileWithRegion(profileARN string, duration time.Duration, region string) (sts.Credentials, string, error) {
-	creds, cookies, err := o.AuthenticateProfile3(profileARN, duration, region)
-
-	return creds, cookies.Session, err
-}
-
-// AuthenticateProfile3 authenticate via SAML and assume IAM roles
-func (o *OktaClient) AuthenticateProfile3(profileARN string, duration time.Duration, region string) (sts.Credentials, OktaCookies, error) {
-=======
-func (o *OktaClient) AuthenticateProfileWithRegion(profileARN string, duration time.Duration, region string) (sts.Credentials, string, error) {
->>>>>>> parent of 18e92f7... feat: Persist device token cookie in keystore to prevent repeated MFA prompt (#259)
 
 	var assertion SAMLAssertion
 
@@ -516,11 +477,7 @@ func (o *OktaClient) challengeMFA() (err error) {
 
 	payload, err = o.preChallenge(oktaFactorID, oktaFactorType)
 
-<<<<<<< HEAD
-	err = o.Get("POST", "api/v1/authn/factors/"+oktaFactorID+"/verify?rememberDevice=true",
-=======
-	err = o.Get("POST", "api/v1/authn/factors/"+oktaFactorId+"/verify",
->>>>>>> parent of 18e92f7... feat: Persist device token cookie in keystore to prevent repeated MFA prompt (#259)
+	err = o.Get("POST", "api/v1/authn/factors/"+oktaFactorID+"/verify",
 		payload, &o.UserAuth, "json",
 	)
 	if err != nil {
