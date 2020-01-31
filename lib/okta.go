@@ -261,6 +261,7 @@ func (o *OktaClient) AuthenticateProfile3(profileARN string, duration time.Durat
 	}
 
 	// retrieve IAM Roles
+	log.Debug("Step: 3.1")
 	principal, role, err := GetRoleFromSAML(assertion.Resp, profileARN)
 	if err != nil {
 		return sts.Credentials{}, oc, err
