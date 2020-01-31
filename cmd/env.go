@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
@@ -12,6 +13,8 @@ import (
 	"github.com/segmentio/aws-okta/lib"
 	"github.com/spf13/cobra"
 )
+
+var envFlagOutputAsJSON = false
 
 // envCmd represents the env command
 var envCmd = &cobra.Command{
@@ -26,6 +29,7 @@ func init() {
 	RootCmd.AddCommand(envCmd)
 	envCmd.Flags().DurationVarP(&sessionTTL, "session-ttl", "t", time.Hour, "Expiration time for okta role session")
 	envCmd.Flags().DurationVarP(&assumeRoleTTL, "assume-role-ttl", "a", time.Hour, "Expiration time for assumed role")
+	envCmd.Flags().BoolVar(&envFlagOutputAsJSON, "json", envFlagOutputAsJSON, "output env as json")
 }
 
 func envRun(cmd *cobra.Command, args []string) error {
@@ -110,23 +114,40 @@ func envRun(cmd *cobra.Command, args []string) error {
 	}
 	role := strings.Split(roleARN, "/")[1]
 
-	fmt.Printf("export AWS_ACCESS_KEY_ID=%s\n", shellescape.Quote(creds.AccessKeyID))
-	fmt.Printf("export AWS_SECRET_ACCESS_KEY=%s\n", shellescape.Quote(creds.SecretAccessKey))
-	fmt.Printf("export AWS_OKTA_PROFILE=%s\n", shellescape.Quote(profile))
-	fmt.Printf("export AWS_OKTA_ASSUMED_ROLE_ARN=%s\n", shellescape.Quote(roleARN))
-	fmt.Printf("export AWS_OKTA_ASSUMED_ROLE=%s\n", shellescape.Quote(role))
+	if envFlagOutputAsJSON {
+		// this is intended for the aws credential_process
+		// see: https://docs.aws.amazon.com/cli/latest/topic/config-vars.html#sourcing-credentials-from-external-processes
+		data := map[string]interface{}{
+			"Version":      1,
+			"AccessKeyId":  shellescape.Quote(creds.AccessKeyID),
+			"SecretAccess": shellescape.Quote(creds.SecretAccessKey),
+			"SessionToken": shellescape.Quote(creds.SessionToken),
+			"Expiration":   p.GetExpiration().Format(time.RFC3339),
+		}
+		jd, err := json.Marshal(data)
+		if err != nil {
+			return err
+		}
+		fmt.Println(string(jd))
+	} else {
 
-	if region, ok := profiles[profile]["region"]; ok {
-		fmt.Printf("export AWS_DEFAULT_REGION=%s\n", shellescape.Quote(region))
-		fmt.Printf("export AWS_REGION=%s\n", shellescape.Quote(region))
+		fmt.Printf("export AWS_ACCESS_KEY_ID=%s\n", shellescape.Quote(creds.AccessKeyID))
+		fmt.Printf("export AWS_SECRET_ACCESS_KEY=%s\n", shellescape.Quote(creds.SecretAccessKey))
+		fmt.Printf("export AWS_OKTA_PROFILE=%s\n", shellescape.Quote(profile))
+		fmt.Printf("export AWS_OKTA_ASSUMED_ROLE_ARN=%s\n", shellescape.Quote(roleARN))
+		fmt.Printf("export AWS_OKTA_ASSUMED_ROLE=%s\n", shellescape.Quote(role))
+
+		if region, ok := profiles[profile]["region"]; ok {
+			fmt.Printf("export AWS_DEFAULT_REGION=%s\n", shellescape.Quote(region))
+			fmt.Printf("export AWS_REGION=%s\n", shellescape.Quote(region))
+		}
+
+		if creds.SessionToken != "" {
+			fmt.Printf("export AWS_SESSION_TOKEN=%s\n", shellescape.Quote(creds.SessionToken))
+			fmt.Printf("export AWS_SECURITY_TOKEN=%s\n", shellescape.Quote(creds.SessionToken))
+		}
+
+		fmt.Printf("export AWS_OKTA_SESSION_EXPIRATION=%d\n", p.GetExpiration().Unix())
 	}
-
-	if creds.SessionToken != "" {
-		fmt.Printf("export AWS_SESSION_TOKEN=%s\n", shellescape.Quote(creds.SessionToken))
-		fmt.Printf("export AWS_SECURITY_TOKEN=%s\n", shellescape.Quote(creds.SessionToken))
-	}
-
-	fmt.Printf("export AWS_OKTA_SESSION_EXPIRATION=%d\n", p.GetExpiration().Unix())
-
 	return nil
 }
