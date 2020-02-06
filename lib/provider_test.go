@@ -9,8 +9,8 @@ import (
 
 	"github.com/99designs/keyring"
 	"github.com/aws/aws-sdk-go/service/sts"
-	"github.com/bmizerany/assert"
 	"github.com/segmentio/aws-okta/sessioncache"
+	"github.com/stretchr/testify/assert"
 )
 
 type testCasePOV struct {
@@ -182,9 +182,7 @@ func TestProviderRetrieve(t *testing.T) {
 	}
 
 	cv, err := p.Retrieve()
-	if err != nil {
-		t.Errorf("unexpected error on retrieve %s", err)
-	}
+	assert.NoError(t, err, "unexpected error on retrieve")
 	assert.Equal(t, aki, cv.AccessKeyID)
 	assert.Equal(t, sak, cv.SecretAccessKey)
 	assert.Equal(t, sst, cv.SessionToken)
@@ -197,9 +195,9 @@ func TestProviderGetOps(t *testing.T) {
 	//kipss := sessioncache.KrItemPerSessionStore{Keyring: kr}
 
 	profile := "test-provider-retrieve"
-	aki := fmt.Sprintf("%d", rand.Intn(100000))
-	sak := fmt.Sprintf("%d", rand.Intn(100000))
-	sst := fmt.Sprintf("%d", rand.Intn(100000))
+	aki := genRandNumStr(12)
+	sak := genRandStr(20)
+	sst := genRandStr(32)
 	sess := sessioncache.Session{
 		Name: profile,
 		Credentials: sts.Credentials{
@@ -226,9 +224,7 @@ func TestProviderGetOps(t *testing.T) {
 		SessionCacheSingleItem: true,
 	}
 	p, err := NewProvider(kr, profile, po)
-	if err != nil {
-		t.Fatal(err)
-	}
+	assert.NoError(t, err)
 
 	key := sessioncache.KeyWithProfileARN{
 		ProfileName: profile,
@@ -238,14 +234,10 @@ func TestProviderGetOps(t *testing.T) {
 	}
 
 	err = skis.Put(&key, &sess)
-	if err != nil {
-		t.Fatalf("error initializing store on Put %s", err)
-	}
+	assert.NoError(t, err, "error init store on Put")
 
 	_, err = p.Retrieve()
-	if err != nil {
-		t.Errorf("unexpected error on retrieve %s", err)
-	}
+	assert.NoError(t, err, "unexpected error on retrieve")
 
 	t.Run("GetExpiration", func(t *testing.T) {
 		assert.Equal(t, p.GetExpiration(), theDistantFuture)
@@ -253,9 +245,7 @@ func TestProviderGetOps(t *testing.T) {
 
 	t.Run("getSamlURL", func(t *testing.T) {
 		su, err := p.getSamlURL()
-		if err != nil {
-			t.Fatal(err)
-		}
+		assert.NoError(t, err)
 		assert.Equal(t, su, "home/amazon_aws/SAML/272")
 	})
 

@@ -135,6 +135,7 @@ func GetRole(roleList saml.AssumableRoles, profileARN string) (saml.AssumableRol
 	return roleList[factorIdx], nil
 }
 
+// ParseSAML parse the html response body from a SAML request, insert found values into the given SAMLAssertion container
 func ParseSAML(body []byte, resp *SAMLAssertion) (err error) {
 	var val string
 	var data []byte
@@ -161,6 +162,7 @@ func ParseSAML(body []byte, resp *SAMLAssertion) (err error) {
 	return
 }
 
+// GetNode traverse the html structure looking for element that has a matching name, return the following element value
 func GetNode(n *html.Node, name string) (val string, node *html.Node) {
 	var isMatch bool
 	if n.Type == html.ElementNode && n.Data == "input" {
@@ -176,7 +178,7 @@ func GetNode(n *html.Node, name string) (val string, node *html.Node) {
 			}
 		}
 	}
-	if node == nil || val == "" {
+	if val == "" {
 		for c := n.FirstChild; c != nil; c = c.NextSibling {
 			val, node = GetNode(c, name)
 			if val != "" {

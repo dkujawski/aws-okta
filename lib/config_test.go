@@ -9,39 +9,30 @@ import (
 	"testing"
 
 	"github.com/mitchellh/go-homedir"
+	"github.com/stretchr/testify/assert"
 	"github.com/vaughan0/go-ini"
 )
 
 func TestNewConfigFromEnv(t *testing.T) {
 	fakeEnvPath := "/fake/env/path/to/.file/config"
-	if err := os.Setenv(envKeyAWSConfigFile, fakeEnvPath); err != nil {
-		t.Error("Unable to set env test value")
-	}
+	err := os.Setenv(envKeyAWSConfigFile, fakeEnvPath)
+	assert.NoError(t, err)
 	t.Run("get aws path from env", func(t *testing.T) {
 		got, err := NewConfigFromEnv()
-		if err != nil {
-			t.Error(err)
-		}
-		if got.file != fakeEnvPath {
-			t.Errorf("unexpected error! wanted '%s' got '%s'", fakeEnvPath, got.file)
-		}
+		assert.NoError(t, err)
+		assert.Equal(t, got.file, fakeEnvPath)
 	})
-	if err := os.Setenv(envKeyAWSConfigFile, ""); err != nil {
-		t.Error("Unable to set empty env value")
-	}
+	err = os.Setenv(envKeyAWSConfigFile, "")
+	assert.NoError(t, err)
+
 	home, err := homedir.Dir()
-	if err != nil {
-		t.Error(err)
-	}
+	assert.NoError(t, err)
+
 	expectedPath := filepath.Join(home, baseNameAWSConfigFile)
 	t.Run("get default config path for OS", func(t *testing.T) {
 		got, err := NewConfigFromEnv()
-		if err != nil {
-			t.Error(err)
-		}
-		if got.file != expectedPath {
-			t.Errorf("unexpected error! wanted '%s' got '%s'", expectedPath, got.file)
-		}
+		assert.NoError(t, err)
+		assert.Equal(t, got.file, expectedPath)
 	})
 }
 
@@ -58,9 +49,8 @@ region = us-west-2
 output = json	
 	`
 	f, err := ini.Load(strings.NewReader(src))
-	if err != nil {
-		t.Error(err)
-	}
+	assert.NoError(t, err)
+
 	fc := FileConfig{
 		file: "",
 		fh:   &f,
@@ -77,9 +67,7 @@ output = json
 	}
 	t.Run("parse config", func(t *testing.T) {
 		got, err := fc.Parse()
-		if err != nil {
-			t.Error(err)
-		}
+		assert.NoError(t, err)
 		if !reflect.DeepEqual(got, expected) {
 			t.Errorf("unexpected failure wanted %#v got %#v", expected, got)
 		}
@@ -102,17 +90,15 @@ assume_role_ttl = 12h
 session_ttl = 12h
 	`
 	f, err := ini.Load(strings.NewReader(src))
-	if err != nil {
-		t.Error(err)
-	}
+	assert.NoError(t, err)
+
 	fc := FileConfig{
 		file: "",
 		fh:   &f,
 	}
 	p, err := fc.Parse()
-	if err != nil {
-		t.Error(err)
-	}
+	assert.NoError(t, err)
+
 	testCases := map[string]string{
 		"nf-sandbox2":            "nf-sandbox2",
 		"nf-sandbox2-extra-role": "nf-sandbox2",
@@ -121,9 +107,7 @@ session_ttl = 12h
 	for profile, expected := range testCases {
 		t.Run(fmt.Sprintf("source profile %s", profile), func(t *testing.T) {
 			got := sourceProfile(profile, p)
-			if got != expected {
-				t.Errorf("unexpected failure wanted %s got %s", expected, got)
-			}
+			assert.Equal(t, got, expected)
 		})
 	}
 }
@@ -133,9 +117,7 @@ func TestGetConfigValue(t *testing.T) {
 
 	t.Run("empty profile", func(t *testing.T) {
 		_, _, foundError := configProfiles.GetValue("profile_a", "config_key")
-		if foundError == nil {
-			t.Error("Searching an empty profile set should return an error")
-		}
+		assert.Error(t, foundError, "Searching an empty profile set should error")
 	})
 
 	configProfiles["okta"] = map[string]string{
@@ -162,60 +144,32 @@ func TestGetConfigValue(t *testing.T) {
 
 	t.Run("missing key", func(t *testing.T) {
 		_, _, foundError := configProfiles.GetValue("profile_a", "config_key")
-		if foundError == nil {
-			t.Error("Searching for a missing key should return an error")
-		}
+		assert.Error(t, foundError, "Searching for a missing key should error")
 	})
 
 	t.Run("fallback to okta", func(t *testing.T) {
 		foundValue, foundProfile, foundError := configProfiles.GetValue("profile_a", "key_a")
-		if foundError != nil {
-			t.Error("Error when searching for key_a")
-		}
-
-		if foundProfile != "okta" {
-			t.Error("key_a should have come from `okta`")
-		}
-
-		if foundValue != "a" {
-			t.Error("The proper value for `key_a` should be `a`")
-		}
+		assert.NoError(t, foundError)
+		assert.Equal(t, foundProfile, "okta")
+		assert.Equal(t, foundValue, "a")
 	})
 
 	t.Run("found in current profile", func(t *testing.T) {
 		foundValue, foundProfile, foundError := configProfiles.GetValue("profile_b", "key_d")
-		if foundError != nil {
-			t.Error("Error when searching for key_d")
-		}
-
-		if foundProfile != "profile_b" {
-			t.Error("key_d should have come from `profile_b`")
-		}
-
-		if foundValue != "d-b" {
-			t.Error("The proper value for `key_d` should be `d-b`")
-		}
+		assert.NoError(t, foundError, "searching for key_d")
+		assert.Equal(t, foundProfile, "profile_b")
+		assert.Equal(t, foundValue, "d-b")
 	})
 
 	t.Run("traversing from child profile", func(t *testing.T) {
 		foundValue, foundProfile, foundError := configProfiles.GetValue("profile_b", "key_a")
-		if foundError != nil {
-			t.Error("Error when searching for key_a")
-		}
-
-		if foundProfile != "okta" {
-			t.Error("key_a should have come from `okta`")
-		}
-
-		if foundValue != "a" {
-			t.Error("The proper value for `key_a` should be `a`")
-		}
+		assert.NoError(t, foundError, "searching for key_a")
+		assert.Equal(t, foundProfile, "okta", "key_a should come from `okta`")
+		assert.Equal(t, foundValue, "a", "`key_a` should b `a`")
 	})
 
 	t.Run("recursive traversing from child profile", func(t *testing.T) {
 		_, _, foundError := configProfiles.GetValue("profile_c", "key_c")
-		if foundError == nil {
-			t.Error("Recursive searching should not work")
-		}
+		assert.Error(t, foundError, "Recursive searching should not work")
 	})
 }
