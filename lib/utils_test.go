@@ -10,7 +10,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bmizerany/assert"
+	"github.com/segmentio/aws-okta/lib/saml"
+	"github.com/stretchr/testify/assert"
 )
 
 var testSAMLHTML = `
@@ -168,9 +169,8 @@ func TestParseSAML(t *testing.T) {
 	tplSAMLValue := template.Must(template.New("saml-value").Parse(testSAMLResponseValueXML))
 	var valueBuf bytes.Buffer
 	err := tplSAMLValue.Execute(&valueBuf, tps)
-	if err != nil {
-		t.Fatal(err)
-	}
+	assert.NoError(t, err, "not expecting an error here")
+
 	valueStr := base64.StdEncoding.EncodeToString(valueBuf.Bytes())
 	valueStr = strings.Replace(valueStr, "+", "&#x2b;", -1)
 	valueStr = strings.Replace(valueStr, "+", "&#x3d;", -1)
@@ -181,24 +181,88 @@ func TestParseSAML(t *testing.T) {
 	tplSAMLHTML := template.Must(template.New("saml-html").Parse(testSAMLHTML))
 	var htmlBuf bytes.Buffer
 	err = tplSAMLHTML.Execute(&htmlBuf, tph)
-	if err != nil {
-		t.Fatal(err)
-	}
+	assert.NoError(t, err, "not expecting an error here")
 
 	got := SAMLAssertion{}
 	err = ParseSAML(htmlBuf.Bytes(), &got)
-	if err != nil {
-		t.Fatal(err)
-	}
+	assert.NoError(t, err, "not expecting an error here")
+
 	fmt.Printf("got.Resp: %#v\n", got.Resp)
-	assert.Equal(t, got.Resp.SAMLP, "")
-	assert.Equal(t, got.Resp.SAML, "")
-	assert.Equal(t, got.Resp.SAMLSIG, "")
-	assert.Equal(t, got.Resp.Destination, tps.Dest)
-	assert.Equal(t, got.Resp.ID, tps.SAMLResponseID)
-	assert.Equal(t, got.Resp.Version, tps.Version)
-	assert.Equal(t, got.Resp.IssueInstant, tps.IssueInstant)
-	assert.Equal(t, got.Resp.InResponseTo, "")
+	assert.Equal(t, got.Resp.SAMLP, "", "should be empty")
+	assert.Equal(t, got.Resp.SAML, "", "should be empty")
+	assert.Equal(t, got.Resp.SAMLSIG, "", "should be empty")
+	assert.Equal(t, got.Resp.Destination, tps.Dest, "should be the same")
+	assert.Equal(t, got.Resp.ID, tps.SAMLResponseID, "should be the same")
+	assert.Equal(t, got.Resp.Version, tps.Version, "should be the same")
+	assert.Equal(t, got.Resp.IssueInstant, tps.IssueInstant, "should be the same")
+	assert.Equal(t, got.Resp.InResponseTo, "", "should be empty")
+}
+
+type testCaseGR struct {
+	name, role, principal string
+	shouldError           bool
+}
+
+func TestGetRole(t *testing.T) {
+	awsID := genRandNumStr(12)
+	tar := saml.AssumableRoles{
+		saml.AssumableRole{
+			Role:      fmt.Sprintf("arn:aws:iam::%s:role/okta-viewonly-role", awsID),
+			Principal: fmt.Sprintf("arn:aws:iam::%s:saml-provider/okta", awsID),
+		},
+		saml.AssumableRole{
+			Role:      fmt.Sprintf("arn:aws:iam::%s:role/okta-admin-role", awsID),
+			Principal: fmt.Sprintf("arn:aws:iam::%s:saml-provider/okta", awsID),
+		},
+	}
+	testCases := []testCaseGR{
+		testCaseGR{
+			name:        "find role/principal in list",
+			role:        fmt.Sprintf("arn:aws:iam::%s:role/okta-viewonly-role", awsID),
+			principal:   fmt.Sprintf("arn:aws:iam::%s:saml-provider/okta", awsID),
+			shouldError: false,
+		},
+		testCaseGR{
+			name:        "handle role/principal not in list",
+			role:        fmt.Sprintf("arn:aws:iam::%s:role/read-only-role", awsID),
+			principal:   fmt.Sprintf("arn:aws:iam::%s:saml-provider/acme", awsID),
+			shouldError: true,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			got, err := GetRole(tar, tc.role)
+			if err != nil && !tc.shouldError {
+				t.Fatal(err)
+			}
+			if err == nil && tc.shouldError {
+				t.Errorf("was expecting to error but did not, instead got: %#v", got)
+			}
+			if !tc.shouldError {
+				assert.Equal(t, got.Role, tc.role, "should be the same")
+				assert.Equal(t, got.Principal, tc.principal, "should be the same")
+			} else {
+				assert.Equal(t, got.Role, "", "should be empty")
+				assert.Equal(t, got.Principal, "", "should be empty")
+			}
+		})
+	}
+	t.Run("empty role list", func(t *testing.T) {
+		got, err := GetRole(saml.AssumableRoles{}, "")
+		assert.Error(t, err, "expecting error")
+		assert.Equal(t, got.Role, "", "should be empty")
+		assert.Equal(t, got.Principal, "", "should be empty")
+	})
+	t.Run("single role", func(t *testing.T) {
+		ar := saml.AssumableRole{
+			Role:      fmt.Sprintf("arn:aws:iam::%s:role/okta-admin-role", awsID),
+			Principal: fmt.Sprintf("arn:aws:iam::%s:saml-provider/okta", awsID),
+		}
+		got, err := GetRole(saml.AssumableRoles{ar}, "")
+		assert.NoError(t, err)
+		assert.Equal(t, got.Role, ar.Role, "should be the same")
+		assert.Equal(t, got.Principal, ar.Principal, "should be the same")
+	})
 }
 
 type testCaseAIDR struct {
@@ -241,11 +305,11 @@ func TestAccountIDAndRoleFromRoleARN(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			gotAccountID, gotRoleName := accountIDAndRoleFromRoleARN(tc.given)
 			if tc.shouldError {
-				assert.Equal(t, "", gotAccountID)
-				assert.Equal(t, tc.given, gotRoleName)
+				assert.Equal(t, "", gotAccountID, "should be empty")
+				assert.Equal(t, tc.given, gotRoleName, "should be the same")
 			} else {
-				assert.Equal(t, accountID, gotAccountID)
-				assert.Equal(t, roleName, gotRoleName)
+				assert.Equal(t, accountID, gotAccountID, "should be the same")
+				assert.Equal(t, roleName, gotRoleName, "should be the same")
 			}
 		})
 	}
