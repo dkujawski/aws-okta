@@ -2,8 +2,9 @@ package lib
 
 import (
 	"fmt"
-	"math/rand"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 type testCase struct {
@@ -22,15 +23,12 @@ func TestGetOktaDomain(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(fmt.Sprintf("get okta domain %s", tc.given), func(t *testing.T) {
 			got, err := GetOktaDomain(tc.given)
-			if err != nil && !tc.shouldError {
-				t.Error(err)
+			if tc.shouldError {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
 			}
-			if err == nil && tc.shouldError {
-				t.Errorf("was expecting an error for %s", tc.given)
-			}
-			if got != tc.expected {
-				t.Errorf("unexpected failure wanted %s got %s", tc.expected, got)
-			}
+			assert.Equal(t, got, tc.expected, "should be the same")
 		})
 	}
 }
@@ -44,7 +42,7 @@ type testCaseOUAF struct {
 
 func TestGetFactorId(t *testing.T) {
 	ouaf := OktaUserAuthnFactor{
-		Id:         fmt.Sprintf("%d", rand.Intn(999)),
+		Id:         genRandStr(12),
 		FactorType: "",
 		Provider:   "",
 		Embedded:   OktaUserAuthnFactorEmbedded{},
@@ -68,13 +66,11 @@ func TestGetFactorId(t *testing.T) {
 		ouaf.FactorType = tc.givenType
 		ouaf.Provider = tc.givenProvider
 		got, err := GetFactorId(&ouaf)
-		if err != nil && !tc.shouldError {
-			t.Error(err)
-		} else if err == nil && tc.shouldError {
-			t.Errorf("expecting error for test %s %s", tc.givenType, tc.givenProvider)
+		if tc.shouldError {
+			assert.Error(t, err)
+		} else {
+			assert.NoError(t, err)
 		}
-		if got != tc.expected {
-			t.Errorf("unexpected error wanted %s got %s", tc.expected, got)
-		}
+		assert.Equal(t, got, tc.expected)
 	}
 }
