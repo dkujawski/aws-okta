@@ -3,24 +3,22 @@ version: 0.2
 phases:
   install:
     commands:
-      - echo "CODEBUILD_SRC_DIR - ${CODEBUILD_SRC_DIR}"
-      - echo "GOPATH - ${GOPATH}"
-      - echo "GOROOT - ${GOROOT}"
-      - which go
+      - go get github.com/nomad-software/vend
+      - go env
       - go version
-  build: 
+  pre_build: 
     commands:
-      - echo "Build started $(date)"
       - go mod vendor
       - go get -u ./...
-      - go get github.com/nomad-software/vend
-      - which vend
-      - pwd
       - vend
+  build: 
+    commands:
       - GOOS=windows go build -mod=vendor -ldflags="-X main.Version=$(git describe --tags --always --dirty='-dev')" -o build/windows/dist/aws-okta.exe
+      - GOOS=linux GOARCH=amd64 GO11MODULE=on go build -mod=vendor -ldflags="-X main.Version=$(git describe --tags --always --dirty='-dev')" -o build/linux/dist/aws-okta
   post_build:
     commands:
       - echo "Build complete $(date)"
 artifacts:
   files:
     - build/windows/dist/aws-okta.exe
+    - build/linux/dist/aws-okta
