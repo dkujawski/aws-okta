@@ -17,7 +17,7 @@ phases:
       - which vend
       - pwd
       - vend
-      - GOOS=windows go build -mod=vendor -ldflags="-X main.Version=$(git describe --tags)" -o build/windows/dist/aws-okta.exe
+      - GOOS=windows go build -mod=vendor -ldflags="-X main.Version=$(git describe --tags --always --dirty='-dev')" -o build/windows/dist/aws-okta.exe
   post_build:
     commands:
       - echo "Build complete $(date)"
