@@ -3,22 +3,15 @@ version: 0.2
 phases:
   install:
     commands:
-      - go get github.com/nomad-software/vend
-      - go env
-      - go version
-  pre_build: 
-    commands:
-      - go mod vendor
-      - go get -u ./...
-      - vend
+      - apt update -q
+      - apt install -yq libusb-dev libusb-1.0.0-dev wixl
+      - make -f Makefile.tools nfpm-debian rpmbuild-debian
   build: 
     commands:
-      - GOOS=windows go build -mod=vendor -ldflags="-X main.Version=$(git describe --tags --always --dirty='-dev')" -o build/windows/dist/aws-okta.exe
-      - GOOS=linux GOARCH=amd64 GO11MODULE=on go build -mod=vendor -ldflags="-X main.Version=$(git describe --tags --always --dirty='-dev')" -o build/linux/dist/aws-okta
-  post_build:
-    commands:
-      - echo "Build complete $(date)"
+      - make -f Makefile.release dist-linux
+      - make -f Makefile.release dist-windows
 artifacts:
   files:
-    - build/windows/dist/aws-okta.exe
-    - build/linux/dist/aws-okta
+    - build/windows/dist/*
+    - build/linux/dist/*
+    - dist/*
