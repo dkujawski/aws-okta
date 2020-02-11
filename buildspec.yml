@@ -6,6 +6,9 @@ phases:
       - apt update -q
       - apt install -yq libusb-dev libusb-1.0.0-dev wixl
       - make -f Makefile.tools nfpm-debian rpmbuild-debian
+  pre_build:
+    commands:
+      - git discribe --tags --always --dirty="-dev"
   build: 
     commands:
       - make -f Makefile.release dist-linux
