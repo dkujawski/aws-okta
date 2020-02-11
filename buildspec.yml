@@ -8,9 +8,11 @@ phases:
       - make -f Makefile.tools nfpm-debian rpmbuild-debian
   pre_build:
     commands:
+      - pwd && ls -lathr
       - git describe --tags --always --dirty="-dev"
   build: 
     commands:
+      - pwd && ls -lathr
       - make -f Makefile.release dist-linux
       - make -f Makefile.release dist-windows
 artifacts:
