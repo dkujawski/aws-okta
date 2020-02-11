@@ -8,7 +8,7 @@ phases:
       - make -f Makefile.tools nfpm-debian rpmbuild-debian
   pre_build:
     commands:
-      - git discribe --tags --always --dirty="-dev"
+      - git describe --tags --always --dirty="-dev"
   build: 
     commands:
       - make -f Makefile.release dist-linux
