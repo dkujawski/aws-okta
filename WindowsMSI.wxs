@@ -1,9 +1,12 @@
 <?xml version='1.0' encoding='windows-1252'?>
+<?define Name = "aws-okta" ?>
+<?define Manufacturer = "Segment" ?>
+<?define Version = "${VERSION}"
 <Wix xmlns='http://schemas.microsoft.com/wix/2006/wi'>
-    <Product Id='8b80949a-e983-4b1c-b44a-1a0af668922' Name='aws-okta' Manufacturer="Segment" Version='${VERSION}' 
+    <Product Id='8b80949a-e983-4b1c-b44a-1a0af668922' Name="$(var.Name)" Manufacturer="$(var.Manufacturer)" Version="$(var.Version)" 
         UpgradeCode='b2a6bcaa-bda3-4c7f-8dec-d8665d7a9b69' Language='1033' Codepage='1252'>
         
-        <Media Id='1' Cabinet='aws-okta-${VERSION}.cab' EmbedCab='yes' />
+        <Media Id='1' Cabinet="$(var.Name)-$(var.Version).cab" EmbedCab='yes' />
         
         <Package Id='*' Keywords='Installer' Description='Installer for the aws-okta commandline tool' 
             Comments='See project repo at https://github.com/segmentio/aws-okta' Manufacturer="Segment" 
@@ -11,21 +14,21 @@
         
         <Directory Id='TARGETDIR' Name='SourceDir'>
             <Directory Id='ProgramFilesFolder' Name='PFiles'>
-                <Directory Id='Segment' Name='Segment'>
-                    <Directory Id='INSTALLDIR' Name='aws-okta' />
+                <Directory Id="$(var.Manufacturer)" Name="$(var.Manufacturer)">
+                    <Directory Id='INSTALLDIR' Name="$(var.Name)" />
                 </Directory>
             </Directory>
         </Directory>
 
         <DirectoryRef Id='INSTALLDIR'>
             <Component Id='MainExecutable' Guid='83f48fd1-1df3-4cc7-820b-ea8ffb5eff16'>
-                <File Id='aws-oktaEXE' Name='aws-okta.exe' Source='dist/aws-okta.exe' KeyPath='yes' />
+                <File Id="$(var.Name)EXE" Name="$(var.Name).exe" Source='dist/$(var.Name).exe' KeyPath='yes' />
             </Component>
         </DirectoryRef>
         
         <DirectoryRef Id='TARGETDIR'>
             <Component Id='RegistryEntries' Guid='96ab348f-309c-48c7-926e-6641ca3e9189'> 
-                <RegistryKey Root='HKLM' Key='SYSTEM\CurrentControlSet\Control\Session Manager\Environment' Action='createAndRemoveOnUninstall'>
+                <RegistryKey Root='HKCU' Key='Environment' Action='createAndRemoveOnUninstall'>
                     <RegistryValue Type='string' Name='PATH' Value="[INSTALLDIR]" KeyPath='yes' />
                 </RegistryKey>
             </Component>
