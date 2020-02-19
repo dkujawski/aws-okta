@@ -4,7 +4,10 @@
 #
 # This makefile is meant for humans
 
-VERSION := $(shell git describe --tags --always --dirty="-dev")
+if [ ! -d ".git" ];then \
+	VERSION := $(shell git describe --tags --always --dirty="-dev") \
+fi
+
 ifeq ($(strip $(VERSION)),)
 	vf := version
 	VERSION := $(shell cat ${vf})
