@@ -5,6 +5,11 @@
 # This makefile is meant for humans
 
 VERSION := $(shell git describe --tags --always --dirty="-dev")
+ifeq ($(strip $(VERSION)),)
+	vf := version
+	VERSION := $(shell cat ${vf})
+endif
+
 LDFLAGS := -ldflags='-X "main.Version=$(VERSION)"'
 
 test:
