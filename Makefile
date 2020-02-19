@@ -10,7 +10,8 @@ fi
 
 ifeq ($(strip $(VERSION)),)
 	vf := version
-	VERSION := $(shell cat ${vf})
+	echo ".git dir not found, reading version from file: $(vf)"
+	VERSION := $(shell cat $(vf))
 endif
 
 LDFLAGS := -ldflags='-X "main.Version=$(VERSION)"'
