@@ -4,7 +4,7 @@
 #
 # This makefile is meant for humans
 
-if [ ! -d ".git" ];then \
+if [ -d ".git" ];then \
 	VERSION := $(shell git describe --tags --always --dirty="-dev") \
 fi
 
