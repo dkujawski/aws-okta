@@ -35,7 +35,7 @@
             Name='SourceDir'>
             
             <Directory 
-                Id='ProgramFilesFolder' 
+                Id='AppDataFolder' 
                 Name='PFiles'>
                 
                 <Directory 
