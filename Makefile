@@ -3,6 +3,11 @@
 # - user can fork the canonical repo and expect to be able to run CircleCI checks
 #
 # This makefile is meant for humans
+
+# AWS CodePipeline does not have immediate access to .git metadata, git describe
+# commands will not be successful and cause the CodeBuild to fail.
+# Additionally WindowsMSI building with WiX Toolset requires semantic versioning
+# Storing build version in text file at repo root in the form major.minor.patch 
 VERSION := $(shell cat version)
 LDFLAGS := -ldflags='-X "main.Version=$(VERSION)"'
 
