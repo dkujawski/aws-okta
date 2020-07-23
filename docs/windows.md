@@ -45,7 +45,6 @@ The easiest way to install under WSL is to download the [latest release](https:/
 2. Clone the repo to your local build machine
 3. Change to the root of the repository and run the following commands
 ```
-$> cd aws-okta/
 $> go mod vendor
 $> go get github.com/nomad-software/vend
 $> ~/go/bin/vend
