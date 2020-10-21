@@ -1,0 +1,17 @@
+version: 0.2
+
+phases:
+  install:
+    commands:
+      - apt update -q
+      - apt install -yq libusb-dev libusb-1.0.0-dev wixl
+      - make -f Makefile.tools nfpm-debian rpmbuild-debian
+  build: 
+    commands:
+      - make -f Makefile.release dist-linux
+      - make -f Makefile.release dist-windows
+artifacts:
+  files:
+    - build/windows/dist/*
+    - build/linux/dist/*
+    - dist/*

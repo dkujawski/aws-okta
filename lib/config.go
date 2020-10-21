@@ -12,44 +12,54 @@ import (
 	"github.com/vaughan0/go-ini"
 )
 
+const envKeyAWSConfigFile = "AWS_CONFIG_FILE"
+const baseNameAWSConfigFile = "/.aws/config"
+
+// Profiles container to store found/existing configuration profiles
 type Profiles map[string]map[string]string
 
 type config interface {
 	Parse() (Profiles, error)
 }
 
-type fileConfig struct {
+// FileConfig container around the aws config file
+type FileConfig struct {
 	file string
+	fh   *ini.File
 }
 
-func NewConfigFromEnv() (config, error) {
-	file := os.Getenv("AWS_CONFIG_FILE")
+// NewConfigFromEnv initialize a FileConfig struct by collect the file path from environment or use ~/.aws/config.
+func NewConfigFromEnv() (*FileConfig, error) {
+	file := os.Getenv(envKeyAWSConfigFile)
 	if file == "" {
 		home, err := homedir.Dir()
 		if err != nil {
 			return nil, err
 		}
-		file = filepath.Join(home, "/.aws/config")
-		if _, err := os.Stat(file); os.IsNotExist(err) {
-			file = ""
-		}
+		file = filepath.Join(home, baseNameAWSConfigFile)
 	}
-	return &fileConfig{file: file}, nil
+	return &FileConfig{file: file}, nil
 }
 
-func (c *fileConfig) Parse() (Profiles, error) {
-	if c.file == "" {
-		return nil, nil
-	}
-
-	log.Debugf("Parsing config file %s", c.file)
+func (c *FileConfig) loadIniFile() error {
 	f, err := ini.LoadFile(c.file)
 	if err != nil {
-		return nil, fmt.Errorf("Error parsing config file %q: %v", c.file, err)
+		return fmt.Errorf("Error parsing config file %q: %v", c.file, err)
 	}
+	c.fh = &f
+	return nil
+}
 
+// Parse load and read the config file, return the profiles found
+func (c *FileConfig) Parse() (Profiles, error) {
+	log.Debugf("Parsing config file %s", c.file)
+	if c.fh == nil {
+		if err := c.loadIniFile(); err != nil {
+			return nil, err
+		}
+	}
 	profiles := Profiles{"okta": map[string]string{}}
-	for sectionName, section := range f {
+	for sectionName, section := range *c.fh {
 		profiles[strings.TrimPrefix(sectionName, "profile ")] = section
 	}
 
@@ -66,28 +76,29 @@ func sourceProfile(p string, from Profiles) string {
 	return p
 }
 
-func (p Profiles) GetValue(profile string, config_key string) (string, string, error) {
-	config_value, ok := p[profile][config_key]
+// GetValue return the value found in the config file for the given profile
+func (p Profiles) GetValue(profile string, configKey string) (string, string, error) {
+	configValue, ok := p[profile][configKey]
 	if ok {
-		return config_value, profile, nil
+		return configValue, profile, nil
 	}
 
 	// Lookup from the `source_profile`, if it exists
 	profile, ok = p[profile]["source_profile"]
 	if ok {
-		config_value, ok := p[profile][config_key]
+		configValue, ok := p[profile][configKey]
 		if ok {
-			return config_value, profile, nil
+			return configValue, profile, nil
 		}
 
 	}
 
 	// Fallback to `okta` if no profile supplies the value
 	profile = "okta"
-	config_value, ok = p[profile][config_key]
+	configValue, ok = p[profile][configKey]
 	if ok {
-		return config_value, profile, nil
+		return configValue, profile, nil
 	}
 
-	return "", "", fmt.Errorf("Could not find %s in %s, source profile, or okta", config_key, profile)
+	return "", "", fmt.Errorf("Could not find %s in %s, source profile, or okta", configKey, profile)
 }
