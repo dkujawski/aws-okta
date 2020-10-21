@@ -207,7 +207,17 @@ func (o *OktaClient) AuthenticateProfileWithRegion(profileARN string, duration t
 	if err != nil {
 		log.Debug("Failed to reuse session token, starting flow from start")
 
-		// Step 1 & Step 2
+		// Clear DT cookie before starting AuthN flow again. Bug #279.
+		o.CookieJar.SetCookies(o.BaseURL, []*http.Cookie{
+			{
+				Name:   "DT",
+				MaxAge: -1,
+			},
+		})
+
+		// Call again to get a new DT cookie and ignore the error
+		err := o.Get("GET", o.OktaAwsSAMLUrl, nil, &assertion, "saml")
+
 		if err := o.AuthenticateUser(); err != nil {
 			return sts.Credentials{}, "", err
 		}
@@ -384,6 +394,7 @@ func (o *OktaClient) postChallenge(payload []byte, oktaFactorProvider string, ok
 					Callback:   f.Embedded.Verification.Links.Complete.Href,
 					Device:     o.MFAConfig.DuoDevice,
 					StateToken: o.UserAuth.StateToken,
+					FactorID:   f.Id,
 				}
 
 				log.Debugf("Host:%s\nSignature:%s\nStateToken:%s\n",
@@ -526,7 +537,6 @@ func GetFactorId(f *OktaUserAuthnFactor) (id string, err error) {
 
 func (o *OktaClient) Get(method string, path string, data []byte, recv interface{}, format string) (err error) {
 	var res *http.Response
-	var body []byte
 	var header http.Header
 	var client http.Client
 
@@ -569,7 +579,7 @@ func (o *OktaClient) Get(method string, path string, data []byte, recv interface
 		ProtoMinor:    1,
 		Header:        header,
 		Body:          ioutil.NopCloser(bytes.NewReader(data)),
-		ContentLength: int64(len(body)),
+		ContentLength: int64(len(data)),
 	}
 
 	if res, err = client.Do(req); err != nil {
@@ -657,7 +667,7 @@ func (p *OktaProvider) Retrieve() (sts.Credentials, string, error) {
 }
 
 func (p *OktaProvider) GetSAMLLoginURL() (*url.URL, error) {
-	item, err := p.Keyring.Get("okta-creds")
+	item, err := p.Keyring.Get(p.OktaAccountName)
 	if err != nil {
 		log.Debugf("couldnt get okta creds from keyring: %s", err)
 		return &url.URL{}, err
